@@ -1,0 +1,164 @@
+Introduction
+This program is written in java and will present a pop up window that will present the user with a series of questions. The survey is based on Harry Potter and the political parties are as follows, Gryffindor, Hufflepuff, Ravenclaw, or Slytherin. Based off of the answers given, it will determine and display which harry potter party you are affiliated with. Results are record and saved into a text document for you to view “survey_results.txt”. Enjoy!
+
+How to run:
+Save code as CS311.java
+Compile in terminal and run program.
+
+//Matthew Irvin
+//Computer Science 311 - Artificial Intelligence
+//Nov 11, 2024
+//Harry Potter Survey
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.*;
+
+public class CS311 extends JFrame {
+    private java.util.List<Question> questions;
+    private int currentQuestionIndex = 0;
+    private Map<String, Integer> scores;
+
+    public CS311() {
+        questions = new ArrayList<>();
+        scores = new HashMap<>();
+        scores.put("Gryffindor", 0);
+        scores.put("Hufflepuff", 0);
+        scores.put("Ravenclaw", 0);
+        scores.put("Slytherin", 0);
+        
+        initQuestions();
+        initUI();
+    }
+
+    private void initQuestions() {
+        questions.add(new Question("What is your approach to bravery?",
+                new String[]{"Confront danger directly and shield others.",
+                        "Act courageously and choose what is correct, even if tough.",
+                        "Employ wisdom to discover smart answers.",
+                        "Plan thoughtfully and use strength to succeed."},
+                new String[]{"Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"}));
+
+        questions.add(new Question("What is your approach to a problem?",
+                new String[]{"Rush forward and address it quickly.",
+                        "Assist others on the path.",
+                        "Research for the best solution and act accordingly",
+                        "Employ cleverness and desire to discover the top method."},
+                new String[]{"Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"}));
+
+        questions.add(new Question("What is your idea of loyalty?",
+                new String[]{"Being with your friends in every situation.",
+                        "Supporting anyone who needs it, even if it is difficult.",
+                        "Faithfulness to learning and seeking wisdom.",
+                        "Loyalty to those who can help you achieve greatness."},
+                new String[]{"Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"}));
+    }
+
+    private void initUI() {
+        setTitle("Harry potter party affiliation");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        setupQuestionPanel();
+    }
+
+    private void setupQuestionPanel() {
+        if (currentQuestionIndex < questions.size()) {
+            getContentPane().removeAll();
+            Question currentQuestion = questions.get(currentQuestionIndex);
+
+            JLabel questionLabel = new JLabel(currentQuestion.getQuestion());
+            getContentPane().add(questionLabel, BorderLayout.NORTH);
+
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.setLayout(new GridLayout(currentQuestion.getOptions().length, 1));
+
+            for (int i = 0; i < currentQuestion.getOptions().length; i++) {
+                String option = currentQuestion.getOptions()[i];
+                JButton optionButton = new JButton(option);
+                int finalI = i;
+                optionButton.addActionListener(e -> {
+                    processAnswer(currentQuestion.getCorrespondingParties()[finalI]);
+                    currentQuestionIndex++;
+                    setupQuestionPanel();
+                });
+                buttonPanel.add(optionButton);
+            }
+
+            getContentPane().add(buttonPanel, BorderLayout.CENTER);
+            revalidate();
+            repaint();
+        } else {
+            showResult();
+        }
+    }
+
+    private void processAnswer(String chosenHouse) {
+        scores.put(chosenHouse, scores.get(chosenHouse) + 1);
+    }
+
+    private void showResult() {
+        String result = Collections.max(scores.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        
+        getContentPane().removeAll();
+        
+        JLabel resultLabel = new JLabel("You are " + result + " House!");
+        getContentPane().add(resultLabel, BorderLayout.CENTER);
+
+        JButton finishButton = new JButton("END");
+        finishButton.addActionListener(e -> saveData(result));
+        getContentPane().add(finishButton, BorderLayout.SOUTH);
+
+        revalidate();
+        repaint();
+    }
+
+    private void saveData(String guessedHouse) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("survey_results.txt", true))) {
+            bw.write("Guessed House: " + guessedHouse + "\n");
+            bw.write("Scores: " + scores.toString() + "\n");
+            bw.write("---------------\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        JOptionPane.showMessageDialog(this, "Thank you!");
+        System.exit(0);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            CS311 ex = new CS311();
+            ex.setVisible(true);
+        });
+    }
+}
+
+class Question {
+    private String question;
+    private String[] options;
+    private String[] correspondingParties;
+
+    public Question(String question, String[] options, String[] correspondingParties) {
+        this.question = question;
+        this.options = options;
+        this.correspondingParties = correspondingParties;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public String[] getOptions() {
+        return options;
+    }
+
+    public String[] getCorrespondingParties() {
+        return correspondingParties;
+    }
+}
+
